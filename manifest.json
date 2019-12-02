@@ -1,0 +1,17 @@
+{
+  "name": "Bukan Judi Bola",
+  "short_name": "BULU",
+  "description":"Aplikasi BULU",
+  "start_url":"/index.html",
+  "display":"standalone",
+  "background_color":"#00897B",
+  "theme_color":"#00897B",
+  "icons":[
+      {
+          "src":"bulu.png",
+          "sizes":"512x512",
+          "type":"image/png"
+      }
+  ],
+  "gcm_sender_id":"315888759775"
+}

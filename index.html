@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="My First PWA"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00897B"/>
+    <title>Bukan Judi Bola</title>
+</head>
+<body>
+
+    <!-- Navigasi-->
+    <nav class="teal lighten-1" role="navigation">
+        <div class="nav-wrapper container">
+                <a href="#home" class="brand-logo" id="logo-container">Bukan Judi Bola</a>
+                <a href="#" class="sidenav-trigger" data-target="nav-mobile">☰</a>
+
+                <ul class="topnav right hide-on-med-and-down"></ul>
+                <ul class="sidenav" id="nav-mobile"></ul>
+        </div>
+    </nav>
+    <!-- Akhir Navigasi-->
+
+    <div class="container" id="body-content"></div>
+    
+    <script type="text/javascript" src="https://unpkg.com/snarkdown@1.0.2/dist/snarkdown.umd.js"></script>
+    <script src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="js/idb.js"></script>
+    <script src="js/api.js"></script>
+    <script type="text/javascript" src="js/nav.js"></script>
+    <script>
+        // REGISTER SERVICE WORKER
+        if ("serviceWorker" in navigator) {
+            registerServiceWorker();
+        } else {
+            console.log("ServiceWorker belum didukung browser ini.");
+        }
+
+        function registerServiceWorker(){
+            return window.addEventListener("load", function() {
+            navigator.serviceWorker
+                .register("./sw.js")
+                .then(function(reg) {
+                    console.log("Pendaftaran ServiceWorker berhasil");
+                    var serviceworker;
+                    if(reg.installing){
+                      serviceworker = reg.installing;
+                    }else if(reg.waiting){
+                      serviceworker = reg.waiting;
+                    }else if(reg.active){
+                      serviceworker = reg.active;
+                    }
+
+                    if(serviceworker){
+                      console.log('sw current state = ',serviceworker.state);
+                      if(serviceworker.state == "activated"){
+                        console.log('sw already active');
+                      }
+                      serviceworker.addEventListener("statechange",function(e){
+                        console.log("sw stchange : ", e.target.state);
+                        if(e.target.state == "activated"){
+                          checkNotif();
+                        }
+                      });
+                    }
+                })
+                .catch(function() {
+                    console.log("Pendaftaran ServiceWorker gagal");
+                });
+            });
+        }
+
+        function checkNotif(){
+          //periksa fitur nofitifikasi api
+          if("Notification" in window){
+            requestPermission();
+          }else{
+            console.error('Browse ini tidak mendukung notifikasi');
+          }
+        }
+        
+
+        //meminta ijin menggunakan notification api
+        function requestPermission(){
+            Notification.requestPermission().then(function(result){
+                if(result==='denied'){
+                    console.log('fitur tidak diijinkan');
+                    return;
+                }else if (result==='default'){
+                    console.log('pengguna menutup kotak');
+                    return;
+                }
+
+                console.log('fitur notif diijinkan');
+
+                if (('PushManager' in window)) {
+                  navigator.serviceWorker.getRegistration().then(function(registration) {
+                    registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array("BJeTjlLpLV_EnRFZ4i6kFFpqcv9Z73OjSTesfT428TLO29GD6_23uAw9el3DQCNag3cWXqmbbyNSQCDLUZYEEZY")
+                      }).then(function(subscribe) {
+                        console.log('Berhasil melakukan subscribe dengan endpoint: ', subscribe.endpoint);
+                        console.log('Berhasil melakukan subscribe dengan p256dh key: ', btoa(String.fromCharCode.apply(
+                            null, new Uint8Array(subscribe.getKey('p256dh')))));
+                        console.log('Berhasil melakukan subscribe dengan auth key: ', btoa(String.fromCharCode.apply(
+                            null, new Uint8Array(subscribe.getKey('auth')))));
+                      }).catch(function(e) {
+                            console.error('Tidak dapat melakukan subscribe ', e.message);
+                      });
+                  });
+                }
+                
+
+                function urlBase64ToUint8Array(base64String) {
+                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    const base64 = (base64String + padding)
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+                    const rawData = window.atob(base64);
+                    const outputArray = new Uint8Array(rawData.length);
+                    for (let i = 0; i < rawData.length; ++i) {
+                        outputArray[i] = rawData.charCodeAt(i);
+                    }
+                    return outputArray;
+                }
+            })
+        }
+
+        //REQUEST API UNTUK PERTAMA KALI
+        // document.addEventListener("DOMContentLoaded", function(){
+        //     getKlasemen();
+        // });
+    </script>
+</body>
+</html>
